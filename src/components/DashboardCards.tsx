@@ -9,10 +9,6 @@ interface Teacher {
   email: string;
 }
 
-interface Props {
-  teachers: Teacher[];
-}
-
 export default function DashboardCards() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
 
