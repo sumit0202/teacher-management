@@ -1,103 +1,143 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { z } from "zod";
+import { teacherSchema } from "@/utils/validations";
+import TeacherFormModal from "@/components/TeacherFormModal";
+import Sidebar from "@/components/Sidebar";
+import DashboardCards from "@/components/DashboardCards";
+import { Pencil, Trash2 } from "lucide-react";
+
+type TeacherInput = z.infer<typeof teacherSchema>;
+
+const HomePage = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [teachers, setTeachers] = useState<TeacherInput[]>([]);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [currentTeacher, setCurrentTeacher] = useState<TeacherInput | null>(
+    null
+  );
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <Sidebar />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Main content */}
+      <main className="flex-1 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <header className="mb-6 flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-gray-800">
+              Teacher Management Dashboard
+            </h1>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition cursor-pointer"
+            >
+              + Add Teacher
+            </button>
+          </header>
+
+          {/* Dashboard Summary Cards */}
+          <DashboardCards teachers={teachers} />
+
+          {/* Teachers Table */}
+          <section className="bg-white p-6 rounded-lg shadow mt-6 shadow-md">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4">
+              Teachers List
+            </h2>
+            {teachers.length === 0 ? (
+              <p className="text-gray-900">Oops! No teachers added yet.</p>
+            ) : (
+              <table className="w-full table-auto border-collapse border-dashed border-gray-300">
+                <thead>
+                  <tr className="bg-gray-300 text-left">
+                    <th className="p-3 text-black text-sm font-semibold">
+                      Name
+                    </th>
+                    <th className="p-3 text-black text-sm font-semibold">
+                      Subject
+                    </th>
+                    <th className="p-3 text-black text-sm font-semibold">
+                      Experience
+                    </th>
+                    <th className="p-3 text-black text-sm font-semibold">
+                      Email
+                    </th>
+                    <th className="p-3 text-black text-sm font-semibold">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teachers.map((t, index) => (
+                    <tr key={index} className="hover:bg-gray-50 border-b">
+                      <td className="p-3 text-black font-semibold">{t.name}</td>
+                      <td className="p-3 text-black font-semibold">
+                        {t.subject}
+                      </td>
+                      <td className="p-3 text-black font-semibold">
+                        {t.experience} years
+                      </td>
+                      <td className="p-3 text-black font-semibold">
+                        {t.email}
+                      </td>
+                      <td className="p-3 flex gap-3">
+                        <button
+                          onClick={() => {
+                            setEditIndex(index);
+                            setCurrentTeacher(teachers[index]);
+                            setIsModalOpen(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                        >
+                          <Pencil size={18} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            const updated = [...teachers];
+                            updated.splice(index, 1);
+                            setTeachers(updated);
+                          }}
+                          className="text-red-600 hover:text-red-800 cursor-pointer"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
         </div>
+
+        {/* Modal */}
+        <TeacherFormModal
+          isOpen={isModalOpen}
+          closeModal={() => {
+            setIsModalOpen(false);
+            setEditIndex(null);
+            setCurrentTeacher(null);
+          }}
+          onSubmit={(data) => {
+            if (editIndex !== null) {
+              const updated = [...teachers];
+              updated[editIndex] = data;
+              setTeachers(updated);
+              setEditIndex(null);
+              setCurrentTeacher(null);
+            } else {
+              setTeachers((prev) => [...prev, data]);
+            }
+            setIsModalOpen(false);
+          }}
+          defaultValues={currentTeacher || undefined}
+        />
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
-}
+};
+
+export default HomePage;
